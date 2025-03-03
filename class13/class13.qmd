@@ -1,0 +1,347 @@
+---
+title: "class13"
+author: "Mason Lew (PID :A17533139)"
+date: today
+toc: TRUE
+format: pdf
+---
+
+##1. Background
+
+Glucocorticoids are used, for example, by people with asthma to reduce inflammation of the airways. The anti-inflammatory effects on airway smooth muscle (ASM) cells has been known for some time but the underlying molecular mechanisms are unclear
+
+Himes et al. used RNA-seq to profile gene expression changes in four different ASM cell lines treated with dexamethasone glucocorticoid.
+
+They found a number of differentially expressed genes but focus much of the discussion on a gene called CRISPLD2.
+
+This gene encodes a secreted protein known to be involved in lung development, and SNPs in this gene in previous GWAS studies are associated with inhaled corticosteroid resistance and bronchodilator response in asthma patients.
+
+##2. Bioconductor setup
+
+```{r}
+library(BiocManager)
+library(DESeq2)
+```
+
+## 3. Import countData and colData
+
+Loading our data:
+
+```{r}
+metaFile <- "/Users/Mason/Desktop/BIMM143/class13/airway_metadata (1).csv"
+countFile <- "/Users/Mason/Desktop/BIMM143/class13/airway_scaledcounts (1).csv"
+
+# Import metadata and take a peak
+metadata = read.csv(metaFile)
+head(metadata)
+```
+
+```{r}
+# Import countdata
+
+counts = read.csv(countFile, row.names=1)
+head(counts)
+```
+> Q1. How many genes are in this dataset?
+
+```{r}
+nrow(counts)
+```
+
+> Q2. How many ‘control’ cell lines do we have? 
+
+```{r}
+sum(metadata$dex == 'control')
+```
+
+## 4. Toy differential gene expression
+
+```{r}
+control <- metadata[metadata[,"dex"]=="control",]
+control.counts <- counts[ ,control$id]
+control.mean <- rowSums( control.counts )/4 
+head(control.mean)
+```
+
+
+>Q3. How would you make the above code in either approach more robust? Is there a function that could help here?
+
+
+
+> Q4. Follow the same procedure for the treated samples (i.e. calculate the mean per gene across drug treated samples and assign to a labeled vector called treated.mean)Q4. Follow the same procedure for the treated samples (i.e. calculate the mean per gene across drug treated samples and assign to a labeled vector called treated.mean)
+
+```{r}
+treated <- metadata[metadata[,"dex"]=="treated",]
+treated.counts <- counts[ ,treated$id]
+treated.mean <- rowSums( treated.counts )/4 
+head(treated.mean)
+```
+
+We will combine our meancount data for bookkeeping purposes.
+
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+```
+
+```{r}
+colSums(meancounts)
+```
+
+>Q5 (a). Create a scatter plot showing the mean of the treated samples against the mean of the control samples. Your plot should look something like the following.
+
+```{r}
+plot(meancounts[,1],meancounts[,2], xlab="Control", ylab="Treated")
+```
+
+>Q5 (b).You could also use the ggplot2 package to make this figure producing the plot below. What geom_?() function would you use for this plot?
+
+`gemo_point()`
+
+```{r}
+library(ggplot2)
+
+ggplot(meancounts) +
+  aes(x = control.mean, y = treated.mean) +
+  geom_point()
+```
+
+> Q6. Try plotting both axes on a log scale. What is the argument to plot() that allows you to do this? 
+
+`log()`
+
+```{r}
+plot(log(meancounts[,1]),log(meancounts[,2]), xlab="Control", ylab="Treated")
+```
+
+Here we calculate **log2foldchange**, add it to our `meancounts` data.frame and inspect the results either with the `head()` or the `View()` function for example.
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+The NaN is returned when you divide by zero and try to take the log. The -Inf is returned when you try to take the log of zero. It turns out that there are a lot of genes with zero expression. Let’s filter our data to remove these genes. Again inspect your result (and the intermediate steps) to see if things make sense to you
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+>Q7. What is the purpose of the arr.ind argument in the which() function call above? Why would we then take the first column of the output and need to call the unique() function?
+
+arr.ind causes the `which()` function to return both row and column positions where there are true values. 
+
+A common threshold used for calling something differentially expressed is a log2(FoldChange) of greater than 2 or less than -2. Let’s filter the dataset both ways to see how many genes are up or down-regulated.
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+
+```
+
+>Q8. Using the up.ind vector above can you determine how many up regulated genes we have at the greater than 2 fc level? 
+
+```{r}
+sum(up.ind)
+```
+
+> Q9. Using the down.ind vector above can you determine how many down regulated genes we have at the greater than 2 fc level?
+
+
+```{r}
+sum(down.ind)
+```
+
+>Q10. Do you trust these results? Why or why not?
+
+No, have not done any sort of statistical analysis of the data to determine p-values
+
+## 5. Setting up for DESeq
+
+```{r}
+library(DESeq2)
+```
+
+
+```{r}
+dds = DESeqDataSetFromMatrix(countData=counts,
+                             colData=metadata,
+                             design=~dex)
+dds = DESeq(dds)
+
+dds
+```
+
+
+## 6. Principal Component Analysis (PCA)
+
+```{r}
+vsd <- vst(dds, blind = FALSE)
+plotPCA(vsd, intgroup = c("dex"))
+```
+
+```{r}
+pcaData <- plotPCA(vsd, intgroup=c("dex"), returnData=TRUE)
+head(pcaData)
+```
+
+```{r}
+# Calculate percent variance per PC for the plot axis labels
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+```
+
+```{r}
+ggplot(pcaData) +
+  aes(x = PC1, y = PC2, color = dex) +
+  geom_point(size =3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  coord_fixed() +
+  theme_bw()
+
+
+```
+
+## 7. DESeq analysis
+
+```{r}
+res <- results(dds)
+res
+```
+
+```{r}
+summary(res)
+```
+
+```{r}
+res05 <- results(dds, alpha=0.05)
+summary(res05)
+```
+
+## 8. Adding annotation data
+
+We will use some bioconductor packages to "map" the ENSEMBLE ids to more useful gene SYMBOL names/ids
+
+
+we can install these packages with:
+`BiocManager::install("AnnotationDbi")`
+```{r}
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+```
+
+What database identifiers can I translate between here:
+```{r}
+columns(org.Hs.eg.db)
+```
+We can now use the `mapIDs()` function to translate/map between these different identifier formats
+
+> 
+Q11. Run the mapIds() function two more times to add the Entrez ID and UniProt accession and GENENAME as new columns called res$entrez, res$uniprot and res$genename.
+
+Let's add SYMBOL, GENENAME and ENTREZID
+```{r}
+res$symbol <- mapIds(org.Hs.eg.db, 
+                    keys = rownames(res),
+                    keytype = "ENSEMBL",
+                    column = "SYMBOL")
+
+res$genename <- mapIds(org.Hs.eg.db, 
+                    keys = rownames(res),
+                    keytype = "ENSEMBL",
+                    column = "GENENAME")
+
+res$entrez <- mapIds(org.Hs.eg.db, 
+                    keys = rownames(res),
+                    keytype = "ENSEMBL",
+                    column = "ENTREZID")
+```
+
+## 9. Data Visualization
+```{r}
+plot( res$log2FoldChange,  -log(res$padj), 
+      xlab="Log2(FoldChange)",
+      ylab="-Log(P-value)")
+```
+
+```{r}
+plot( res$log2FoldChange,  -log(res$padj), 
+ ylab="-Log(P-value)", xlab="Log2(FoldChange)")
+
+# Add some cut-off lines
+abline(v=c(-2,2), col="darkgray", lty=2)
+abline(h=-log(0.05), col="darkgray", lty=2)
+```
+
+```{r}
+# Setup our custom point color vector 
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+# Volcano plot with custom colors 
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=mycols, ylab="-Log(P-value)", xlab="Log2(FoldChange)" )
+
+# Cut-off lines
+abline(v=c(-2,2), col="gray", lty=2)
+abline(h=-log(0.1), col="gray", lty=2)
+```
+
+## 10. Pathway analysis
+
+Now I know the gene names and their IDs in different databases I want to know what type of biology they are involved in...
+
+This is the job of "pathwat analysis" (aka "gene set enrichment")
+
+there are tones of different BioCOnductor packages for pathway analysis here. We use just on of them called **gage** and **parthview**. I will install these packages with `BiocManager::install(c("gage", "pathview", "gageData"))`
+
+```{r}
+library(gage)
+library(gageData)
+library(pathview)
+```
+Load up our Kegg gentrics
+```{r}
+data(kegg.sets.hs)
+head(kegg.sets.hs, 2)
+```
+
+We will use these KEGG genesets (aka pathways) and our `res` results to see what overlaps To do this we will use the `gage()` function.
+
+For inputs `gage()` wants just a vector of importance - in our case FoldChange values
+```{r}
+foldchanges <- res$log2FoldChange
+```
+
+Vectos in R cna have "names" that are useful for bookkepping so we know what a given balue coressponds to.
+
+Lets put names on our `foldchanges` vecotr - here we will use `res$entrez`
+```{r}
+names(foldchanges) <- res$entrez
+```
+
+Now we can run "pathway analysis"
+```{r}
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+```
+
+```{r}
+head(keggres$less)
+```
+
+We can get a pathway image file with our geneset highlighted via the `pathview()` function.
+
+```{r}
+pathview(foldchanges, pathway.id = "hsa05310")
+```
+
+Insert this figure in my report
+
+![](hsa05310.pathview.png)
+

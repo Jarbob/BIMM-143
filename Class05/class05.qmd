@@ -1,0 +1,291 @@
+---
+title: "Class 05: Data Visualization with GGPLOT"
+author: "Mason Lew (PID: A17533139)"
+format: html
+---
+
+## Intro to ggplot
+
+There are many graphic systems in R (ways to make plots and figures). these include "base" R plots. Today we will focus mostly on **ggplot2** package. 
+
+Let's start with a plot of a simple in-built dataset called `cars`.
+```{r}
+head(cars)
+```
+```{r}
+plot(cars)
+```
+
+Let's see who we can make this figure using **ggplot**. First I need to install this package on my computer. To install any R package, I use the function `install.package()`. 
+
+> I will run `install.package("ggplot2")` in my R console not this quarto document! (so it does not download everytime I render the document).
+
+Before I can use any functions from add on packages, I need to load the package from my "library()" with the `library(ggplot2)` call.
+
+```{r}
+library(ggplot2)
+
+ggplot(cars)
+```
+
+The above graph does not render because all ggplot figures have at least 3 things (called layers). These include: 
+
+ - **data** (the input dataset I want to plot from).
+ - **aes** (the aesthetic mapping of the data to my plot).
+ - **geoms** (the geom_point(), geom_line() etc. that I want to draw).
+ 
+```{r}
+ggplot(cars) + 
+  aes(x= speed, y= dist) +
+  geom_point()
+```
+ 
+ lets add a line to show the relationship here:
+ 
+```{r}
+ggplot(cars) + 
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  theme_bw() +
+  labs(title="My first GGPLOT")
+```
+ 
+ >Which geometiric layer should be used to create scatter plots in ggplot2?
+
+geom_point()
+ 
+## Gene Expression figure
+
+The code to read the data set
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+> How many genes are in this dataset?
+
+```{r}
+nrow(genes)
+```
+ 
+ > Use the colnames() function and the ncol() function on the genes data frame to find out what the column names are (we will need these later) and how many columns there are. How many columns did you find? 
+ 
+```{r}
+colnames(genes)
+```
+ 
+ >Use the table() function on the State column of this data.frame to find out how many ‘up’ regulated genes there are. What is your answer?
+ 
+```{r}
+table(genes$State)
+```
+ 
+ >Using your values above and 2 significant figures. What fraction of total genes is up-regulated in this dataset?
+ 
+```{r}
+n.tot <- nrow(genes)
+vals <- table(genes$State)
+
+vals.percent <- vals/n.tot * 100
+round(vals.percent,2)
+```
+
+ A first plot of this dataset
+ 
+```{r}
+p <- ggplot(genes) +
+  aes(x=Condition1, y=Condition2, col=State) +
+  geom_point() +
+  labs(title = "Gene Expression Changes Upon Drug Treatment", 
+       x="Control Expression",
+       y="Drug Pressence Expression") +
+  theme_minimal() + scale_color_manual(values=c("blue", "gray", "red"))
+
+p
+```
+ 
+## Going Further Using Gapminder
+
+First I will install gapminder and dply using `install.packages("gapminder")` and `install.packages("dplyr")` again this is done in the R console so gapminder and dplyr does not install every time I render this document
+
+```{r}
+library(gapminder)
+library(dplyr)
+
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+
+gapminder <- read.delim(url)
+
+head(gapminder)
+
+gapminder_2007 <- gapminder %>% filter(year==2007)
+
+```
+
+Let’s consider the gapminder_2007 dataset which contains the variables GDP per capita gdpPercap and life expectancy lifeExp for 142 countries in the year 2007. 
+
+```{r}
+ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp, color=continent, size=pop) +
+  geom_point(alpha=0.5)
+```
+
+Now, let’s see how the plot looks like if we color the points by the numeric variable population pop:
+ 
+```{r}
+ggplot(gapminder_2007) + 
+  aes(x = gdpPercap, y = lifeExp, color = pop) +
+  geom_point(alpha=0.8)
+```
+
+For the gapminder_2007 dataset we can plot the GDP per capita (x=gdpPercap) vs. the life expectancy (y=lifeExp) and set the point size based on the population (size=pop) of each country we can use:
+
+```{r}
+ggplot(gapminder_2007) + 
+  aes(x = gdpPercap, y = lifeExp, size = pop) +
+  geom_point(alpha=0.5)
+```
+
+However, the size scaling is not to scale. To do this use the `scale_size_area()` function. 
+
+```{r}
+ggplot(gapminder_2007) + 
+  geom_point(aes(x = gdpPercap, y = lifeExp,
+                 size = pop), alpha=0.5) + 
+  scale_size_area(max_size = 10)
+```
+
+>Can you adapt the code you have learned thus far to reproduce our gapminder scatter plot for the year 1957? What do you notice about this plot is it easy to compare with the one for 2007?
+
+```{r}
+gapminder_1957 <- gapminder %>% filter(year==1957)
+
+ggplot(gapminder_1957) +
+  aes(x=gdpPercap, y=lifeExp, col=continent, size = pop) +
+  geom_point(alpha=0.7) +
+  scale_size_area(max_size=15)
+```
+
+>Do the same steps above but include 1957 and 2007 in your input dataset for ggplot(). You should now include the layer facet_wrap(~year) to produce the following plot:
+
+```{r}
+gapminder_1957_2007 <- gapminder %>% filter(year==1957 | year==2007)
+
+ggplot(gapminder_1957_2007) +
+  aes(x=gdpPercap, y=lifeExp, col=continent, size = pop) +
+  geom_point(alpha=0.7) +
+  scale_size_area(max_size=10) +
+  facet_wrap(~year)
+```
+
+## Intro to Bar Charts
+
+Below you can find an example showing the number of people (in millions) in the five biggest countries by population in 2007:
+
+```{r}
+gapminder_top5 <- gapminder %>% 
+  filter(year==2007) %>% 
+  arrange(desc(pop)) %>% 
+  top_n(5, pop)
+
+gapminder_top5
+```
+
+Creating a simple bar chart uses `geom_col()` function. This requires the x aesthetic mapping which defines the different bars to be plotted and the y mapping which defines the variable associated with the height of each bar. 
+
+Let's create out first bar chart with the `gapminder_top5` dataset
+
+```{r}
+ggplot(gapminder_top5) + 
+  aes(x = country, y = pop) +
+  geom_col()
+```
+
+`geom_col()` allows users to map additional dataset variables to the color attribute of the bar. The `fill` aesthetic can be used to fill the entire bars with color
+
+```{r}
+ggplot(gapminder_top5) + 
+  aes(x = country, y = pop, fill = continent) +
+  geom_col()
+  
+```
+
+Let’s see what happens if we use a **numeric** variable like life expectancy lifeExp instead:
+
+```{r}
+ggplot(gapminder_top5) +
+  aes(x=reorder(country, -pop), y=pop, fill=gdpPercap) +
+  geom_col()
+```
+
+In some circumstances it might be useful to rotate (or “flip”) your plots to enable a more clear visualization. For this we can use the `coord_flip()` function. Lets look at an example considering arrest data in US states. This is another in-bult dataset called `USArrests`.
+
+```{r}
+head(USArrests)
+```
+```{r}
+USArrests$State <- rownames(USArrests)
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_col() +
+  coord_flip()
+```
+
+The produced flipped bar graph appears to be crowed. Let’s try an alternative custom visualization by combining `geom_point()` and `geom_segment()`:
+```{r}
+ggplot(USArrests) +
+  aes(x=reorder(State,Murder), y=Murder) +
+  geom_point() +
+  geom_segment(aes(x=State, 
+                   xend=State, 
+                   y=0, 
+                   yend=Murder), color="blue") +
+  coord_flip()
+```
+
+##Extensions: Animation
+
+I will now install **gganimate** and **gifski**. For reasons explained before, I will type `install.packages("gifski")` and `install.packages("gganimate")`
+
+```{r}
+library(gapminder)
+library(gganimate)
+
+# Setup nice regular ggplot of the gapminder data
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  # Facet by continent
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  shadow_wake(wake_length = 0.1, alpha = FALSE)
+```
+
+##Combining Plots Using Patchwork
+
+I will now install patchwork using `install.packages('patchwork')`
+
+Another excellent package extending ggplot is patchwork that is useful for combining plots to make an all-in-one multi-panel figure. For example:
+
+```{r}
+library(patchwork)
+
+# Setup some example plots 
+p1 <- ggplot(mtcars) + geom_point(aes(mpg, disp))
+p2 <- ggplot(mtcars) + geom_boxplot(aes(gear, disp, group = gear))
+p3 <- ggplot(mtcars) + geom_smooth(aes(disp, qsec))
+p4 <- ggplot(mtcars) + geom_bar(aes(carb))
+
+# Use patchwork to combine them here:
+(p1 | p2 | p3) /
+      p4
+```
+
+ 

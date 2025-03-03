@@ -1,0 +1,354 @@
+---
+title: "class09"
+author: "Mason Lew (PID: A17533139)"
+format: pdf
+toc: TRUE
+---
+
+Today we will examine data from 538 on common halloween candy. In particular we will use ggplot, 
+
+```{r}
+url <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/candy-power-ranking/candy-data.csv"
+
+candy <- read.csv(url, row.names = 1)
+
+head(candy)
+```
+
+> Q1. How many different candy types are in this dataset?
+
+```{r}
+ncol(candy)
+```
+
+> Q2. How many fruity candy types are in the dataset?
+
+```{r}
+sum(candy$fruity)
+```
+
+> How many chocolate candies are there
+
+```{r}
+sum(candy$chocolate)
+```
+
+>Q3. What is your favorite candy in the dataset and what is it’s winpercent value?
+
+```{r}
+candy["M&M's", "winpercent"]
+```
+
+```{r}
+candy["M&M's",]$winpercent
+```
+
+>Q4. What is the winpercent value for “Kit Kat”?
+
+```{r}
+candy["Kit Kat",]$winpercent
+```
+
+>Q5. What is the winpercent value for “Tootsie Roll Snack Bars”?
+
+```{r}
+candy["Tootsie Roll Snack Bars",]$winpercent
+```
+
+```{r}
+library("skimr")
+skim(candy)
+```
+
+> Q6. Is there any variable/column that looks to be on a different scale to the majority of the other columns in the dataset?
+
+**N.B.** The `winpercent` variable is on a different scale (about a 100x magnitude/ 1-100% versus 0-1). We will most likely need to scale the data if we plan to do PCA.
+
+> Q7. What do you think a zero and one represent for the candy$chocolate column?
+
+the 0s are not chocolate while the 1s are chocolate
+
+>Q8. Plot a histogram of winpercent values
+
+```{r}
+library(ggplot2)
+
+ggplot(candy) + 
+  aes(winpercent) +
+  geom_histogram(bins = 10, fill = "navy")
+
+```
+
+
+>Q9. Is the distribution of winpercent values symmetrical?
+
+No
+
+>Q10. Is the center of the distribution above or below 50%?
+
+```{r}
+summary(candy$winpercent)
+```
+
+mean is above 50 but median is below 50 at 47.38. The center of the distribution is more so the median so, no the center is not above 50.
+
+>Q11. On average is chocolate candy higher or lower ranked than fruit candy?
+
+-step one: find all "chocolate" candy
+-step two: find their "winpercent" values
+-step three: summarize these values
+-step four: find all "fruit" candy
+-step five: find their "winpercent" values
+-step six: summarize these values
+-step seven: compare summarized points
+
+1. Find all chocolate candy
+```{r}
+choc.inds <- candy$chocolate == 1
+```
+
+2. Find their "winpercent" values
+```{r}
+choc.win <- candy[choc.inds,]$winpercent
+```
+
+3. Summarize these values
+```{r}
+choc.mean <- mean(choc.win)
+choc.median <- median(choc.win)
+
+choc.mean
+choc.median
+```
+4. Find all fruit candy
+```{r}
+fruit.inds <- candy$fruity == 1
+```
+
+5. Find their "winpercent"
+```{r}
+fruit.win <- candy[fruit.inds,]$winpercent
+```
+
+6. Summarize these values
+```{r}
+fruit.mean <- mean(fruit.win)
+fruit.median <- median(fruit.win)
+
+fruit.mean
+fruit.median
+```
+
+7. Compare
+```{r}
+choc.mean
+fruit.mean
+
+choc.median
+fruit.median
+```
+
+On average, across both mean and median, Chocolate had a higher `winpercent`
+
+>Q12. Is this difference statistically significant?
+
+```{r}
+t.test(choc.win, fruit.win)
+```
+
+Yes! The difference is statistically significant based on a ttest at 95% confidence resulting in a p-value <.05.
+
+>Q13. What are the five least liked candy types in this set?
+
+```{r}
+#not that useful - it just sorts values
+sort(candy$winpercent)
+```
+
+```{r}
+x <- c(10, 1, 100)
+order(x)
+```
+
+```{r}
+x [order(x)]
+```
+
+The `order()` function tells us how to arrange the elements of the input to make them sorted - i.e. how to order them
+
+We can determine the order of winpercent to make them sorted and use that order to arrange the whole data set
+
+```{r}
+ord.inds <- order(candy$winpercent)
+head(candy[ord.inds,])
+```
+
+
+>Q14. What are the top 5 all time favorite candy types out of this set?
+
+```{r}
+ord.inds <- order(candy$winpercent)
+tail(candy[ord.inds,])
+```
+
+```{r}
+ord.inds.d <- order(candy$winpercent, decreasing = TRUE)
+head(candy[ord.inds.d,])
+```
+
+> Q15. Make a first barplot of candy ranking based on winpercent values.
+
+
+```{r}
+ggplot(candy) +
+  aes(winpercent, rownames(candy)) +
+  geom_col()
+```
+
+> Q16. This is quite ugly, use the reorder() function to get the bars sorted by winpercent?
+
+```{r}
+ggplot(candy) +
+  aes(winpercent, reorder(rownames(candy), winpercent)) +
+  geom_col()
+```
+
+We need to make our own separate color vector where we can spell out exactly what candy is colored a particular color
+
+```{r}
+mycols <- rep("black", nrow(candy))
+mycols[candy$chocolate == 1] <- "chocolate"
+mycols[candy$bar == 1] <- "brown"
+mycols[candy$fruity == 1] <- "lightblue"
+```
+
+```{r}
+ggplot(candy) +
+  aes(winpercent, rownames(candy)) +
+  geom_col(fill = mycols)
+```
+
+> Q17. What is the worst ranked chocolate candy?
+
+Hershey's Milk Chocolate
+
+> Q18. What is the best ranked fruity candy?
+
+Airheads
+
+## Taking a look at price percent
+
+Make a plot of winpercent (x-axis) vs pricepercent (y-axis)
+```{r}
+ggplot(candy) +
+  aes(winpercent, pricepercent, label = rownames(candy)) +
+  geom_point(col = mycols) +
+  geom_text()
+```
+
+to avoid over plotting of text we can use the `repel` package.
+
+```{r}
+library(ggrepel)
+
+ggplot(candy) +
+  aes(winpercent, pricepercent, label = rownames(candy)) +
+  geom_point(col = mycols) +
+  geom_text_repel(max.overlaps = 12) +
+  theme_bw()
+```
+
+>Q19. Which candy type is the highest ranked in terms of winpercent for the least money - i.e. offers the most bang for your buck?
+
+Reese's Miniatures
+
+>Q20. What are the top 5 most expensive candy types in the dataset and of these which is the least popular?
+
+```{r}
+ord <- order(candy$pricepercent, decreasing = TRUE)
+head( candy[ord,c(11,12)], n=5 )
+```
+
+The least popular of the top 5 most expensive candies is Nik L Nip
+
+> Q21. Make a barplot again with geom_col() this time using pricepercent and then improve this step by step, first ordering the x-axis by value and finally making a so called “dot chat” or “lollipop” chart by swapping geom_col() for geom_point() + geom_segment().
+
+```{r}
+ggplot(candy) +
+  aes(pricepercent, reorder(rownames(candy), pricepercent)) +
+  geom_segment(aes(yend = reorder(rownames(candy), pricepercent), 
+                   xend = 0), col="gray40") +
+    geom_point()
+```
+
+
+## 5. Exploring the correlation structure
+
+Now that we have explored the dataset a little, we will see how the variables interact with one another.
+
+First we will use correlation and view the results with the **corrplot** package to plot a correlation matrix
+```{r}
+cij <- cor(candy)
+```
+
+```{r}
+library (corrplot)
+
+corrplot(cij)
+```
+
+> Q22. Examining this plot what two variables are anti-correlated (i.e. have minus values)?
+
+fruit and chocolate are anti-correlated (but any red values)
+
+> Q23. Similarly, what two variables are most positively correlated?
+
+variables are correlated with themselves. The variables that are positively correlated would be chocolate and winpercent and chocolate with pricepercent (anything in blue)
+
+##PCA
+
+Let's applyy PCA using `prcomp` 
+```{r}
+pca <- prcomp(candy, scale = TRUE)
+```
+
+```{r}
+summary(pca)
+```
+
+```{r}
+attributes(pca)
+```
+
+Let's plot our main results as our PCA "score plot"
+
+```{r}
+p <- ggplot(pca$x) +
+  aes(PC1, PC2, label = rownames(pca$x)) +
+  geom_point(col=mycols) 
+p
+
+```
+
+```{r}
+library(ggrepel)
+
+p + geom_text_repel(size=3.3, col=mycols, max.overlaps = 7)  + 
+  theme(legend.position = "none") +
+  labs(title="Halloween Candy PCA Space",
+       subtitle="Colored by type: chocolate bar (dark brown), chocolate other (light brown), fruity (red), other (black)",
+       caption="Data from 538")
+```
+
+Finally lets look at how the original variables contribute to the PCs, Start with PC 1
+
+```{r}
+ggplot(pca$rotation) + 
+  aes(PC1, rownames(pca$rotation)) +
+  geom_col()
+```
+
+
+> Q24. What original variables are picked up strongly by PC1 in the positive direction? Do these make sense to you?
+
+Fruity, hard, and pluribus. Yes, this makes sense to me as these match the results of the correlation plot from earlier.

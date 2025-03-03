@@ -1,0 +1,104 @@
+---
+title: "11: Structural Bioinformatics (pt2. Focus on new AlphaFold2)"
+author: "Mason Lew (PID: A17533139)"
+date: today
+toc: TRUE
+format: pdf
+---
+
+Here we are going to analyze our AlphaFold structure prediction models. The input directory/folder comes from the ColabFold server:
+
+```{r}
+#Change this for your results dir name
+results_dir <- "hivpr_dimer_23119/"
+```
+
+```{r}
+#File names for all PDB models
+pdb_files <- list.files(path = "/Users/Mason/Desktop/BIMM143/Class11/hivpr_dimer_23119",
+                        pattern = ".pdb",
+                        full.names = TRUE)
+
+#printing PDB file names
+basename(pdb_files)
+```
+
+I will now be using BIO3D for further analysis
+```{r}
+library(bio3d)
+```
+
+Align and superpose
+```{r}
+pdbs <- pdbaln(pdb_files, fit = TRUE, exefile = "msa")
+```
+
+```{r}
+pdbs
+```
+
+```{r}
+pc <- pca(pdbs)
+plot(pc)
+```
+
+##RMSD Analysis
+
+RMSD is a common measure of structural distance
+
+```{r}
+rd <- rmsd(pdbs, fit=T)
+```
+```{r}
+rd
+```
+
+```{r}
+range(rd)
+```
+
+```{r}
+library(pheatmap)
+
+colnames(rd) <- paste0("m", 1:5)
+rownames(rd) <- paste0("m", 1:5)
+pheatmap(rd)
+```
+
+Mol* superposed dimers structure:
+
+![Figure 1: Superposed dimer](Dimer 1.png)
+
+```{r}
+# Read a reference PDB structure
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+plotb3(pdbs$b[1,], typ="l", lwd=2, sse=pdb)
+points(pdbs$b[2,], typ="l", col="red")
+points(pdbs$b[3,], typ="l", col="blue")
+points(pdbs$b[4,], typ="l", col="darkgreen")
+points(pdbs$b[5,], typ="l", col="orange")
+abline(v=100, col="gray")
+```
+
+```{r}
+core <- core.find(pdbs)
+```
+
+```{r}
+core.inds <- print(core, vol=0.51)
+```
+
+```{r}
+xyz <- pdbfit(pdbs, core.inds, outpath = "corefit_structures")
+```
+
+```{r}
+rf <- rmsf(xyz)
+
+plotb3(rf, sse=pdb)
+abline(v=100, col="gray", ylab="RMSF")
+```
+
