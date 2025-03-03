@@ -1,2 +1,2 @@
-# BIMM-142
+# BIMM-143
 Bioinformatics lab class
