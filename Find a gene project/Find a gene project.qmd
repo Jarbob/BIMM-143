@@ -1,0 +1,43 @@
+---
+title: "Find a Gene Project"
+author: "Mason Lew (PID: A17533139)"
+format: html
+Date: today
+---
+
+```{r}
+library(bio3d)
+data <- read.fasta("/Users/Mason/Desktop/BIMM143/BIMM-142/Find a gene project/Heatmap of aligned sequences")
+pdbs <- seqidentity(data)
+```
+
+```{r}
+pc <- pca(pdbs)
+plot(pc)
+```
+
+```{r, warning=FALSE}
+rd <- rmsd(pdbs, fit=T)
+rd
+```
+```{r}
+range(rd)
+pdbs
+```
+```{r}
+library(pheatmap)
+
+#colnames(rd) <- paste0("m", 1:5)
+#rownames(rd) <- paste0("m", 1:5)
+pheatmap(pdbs, color = hcl.colors(11,"Blues",rev = T)[c(3:9,11)], border_color = NA, display_numbers = T, number_color = "white")
+```
+```{r}
+blast <- "ATAILAYLPQELLGTSCYEYFHQDDIGHLAECHRQVLQSREKINTNCYKFKVKDGSFITLRSCWFSFMNPWTKEVEYIVSTNTVASAHVLDGGDATFPQLAASPHSMDSVLQAGEGGPKRSLPTVPGIPGGTRAGAGRIGRMIAEEIMEIHRIRGSSPSSCGSSPLNMTSTPPPDTSSPGGKRILNGGTPDIPPTSLLSRQIHDNPGYPYSDNSSILGENSHIGIDMIDNDQGSSSPSND"
+blast.pdb(blast)
+```
+
+
+```{r}
+pdb.annotate(blast)
+```
+

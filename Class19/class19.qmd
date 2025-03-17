@@ -1,0 +1,62 @@
+---
+title: "Class19"
+author: "Mason Lew (PID: A17533139)"
+format: html
+toc: TRUE
+Date: today
+---
+
+>Q1. [1pt]What protein do these sequences correspond to? (Give both full gene/protein name and official symbol).
+
+```{r}
+library(bio3d)
+data <- read.fasta("/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/A17533139_mutant_seq.fa")
+data
+```
+
+tyrosine-protein kinase JAK2 isoform a [Homo sapiens]
+
+```{r}
+conserve <- conserv(data)
+positions <- which(conserve != 1)
+positions
+```
+
+>Q2. [6pts]Whatarethetumorspecificmutationsinthisparticularcase(e.g.A130V)?
+
+```{r}
+residues <- data$ali[positions]
+residues
+```
+
+T557V, S591E, K603R, T689Y
+
+>Do your mutations cluster to any particular domainand if so give the name and PFAM id of this domain? Alternately note whether your protein is single domainand provide it’s PFAM id/accession and name (e.g.PF00613 and PI3Ka).
+
+This protein is not a single domain, the mutations are focused within the Protein tyrosine and serine/threonine kinase domain: PFAM id: PF07714, Accession: A0A010QA77
+
+
+>Q4. [2pts]Using the NCI-GDC list the observed top 2 missense mutations in this protein (aminoacidsubstitutions)?
+
+R683G, T875N
+
+>Q5. [2pts]What two TCGA projects have the most cases affected by mutations of this gene? (Give the TCGA “code” and “ProjectName” for example “TCGA-BRCA”and “Breast Invasive Carcinoma”).
+
+TCGA-UCEC, Uterine Corpus Endometrial Carcinoma
+	
+TCGA-STAD, Stomach Adenocarcinoma
+
+>Q6. [3pts]List one RCSB PDB identifier with 100% identity to the wt_healthy sequence and detail the percent coverage of your query sequence for this known structure? Alternately, provide the most similar in sequence PDB structure along with it’s percent identity, coverage and E-value. Does this structure “cover” (i.e. include or span the amino acid residue positions) of your previously identified tumor specific mutations?
+
+tyrosine-protein kinase JAK2 isoform a [Homo sapiens], NP_001309123.1: 100% query coverage, 100% identity, 0 E-value. Yes this sequence cover the identified tumor specific mutation 
+
+> Q7. [10pts] Using Alpha Fold notebook generate a structural model using the default parameters for your mutant sequence.
+
+!["/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/587E42C122BFB93B.png"](hi)
+
+```{r, warning=FALSE}
+cif.file<- "/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/fold_mutant_jak2_model_1.cif"
+x <- read.cif(cif.file)
+write.pdb(x, file="FT_map2.pdb")
+```
+
