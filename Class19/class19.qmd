@@ -1,7 +1,7 @@
 ---
 title: "Class19"
 author: "Mason Lew (PID: A17533139)"
-format: html
+format: github_document
 toc: TRUE
 Date: today
 ---
@@ -55,8 +55,8 @@ tyrosine-protein kinase JAK2 isoform a [Homo sapiens], NP_001309123.1: 100% quer
 !["/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/587E42C122BFB93B.png"](hi)
 
 ```{r, warning=FALSE}
-cif.file<- "/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/fold_mutant_jak2_model_1.cif"
+cif.file<- "/Users/Mason/Desktop/BIMM143/BIMM-142/Class19/fold_mutant_jak2_model_4.cif"
 x <- read.cif(cif.file)
-write.pdb(x, file="FT_map2.pdb")
+write.pdb(x, file="FT_map5.pdb")
 ```
 
