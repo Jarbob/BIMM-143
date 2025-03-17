@@ -3,7 +3,7 @@ title: "class14"
 author: "Mason Lew (PID :A17533139)"
 date: today
 toc: TRUE
-format: pdf
+format: gfm
 ---
 
 ## Background

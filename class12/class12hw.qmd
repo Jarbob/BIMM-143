@@ -2,7 +2,7 @@
 title: "class12_hw"
 author: "Mason Lew (PID: A17533139)"
 date: today
-format: pdf
+format: gfm
 ---
 > Q13: Read this file into R and determine the sample size for each genotype and their corresponding median expression levels for each of these genotypes. Hint: The read.table(), summary() and boxplot() functions will likely be useful here. There is an example R script online to be used ONLY if you are struggling in vein.  Note that you can find the medium value from saving the output of the boxplot() function to an R object and examining this object. There is also the medium() and summary() function that you can use to check your understanding. 
 

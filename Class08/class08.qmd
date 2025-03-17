@@ -1,7 +1,7 @@
 ---
 title: "class8: PCR Mini Project"
 author: "Mason Lew (PID: A17533139)"
-format: pdf
+format: gfm
 ---
 
 Today we will do a complete analysis of some breast cancer biopsy data but first, let's revisit the main PCA function in `R precomp()` and see what `scale=TRUE/False` does

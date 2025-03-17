@@ -3,7 +3,7 @@ title: "11: Structural Bioinformatics (pt2. Focus on new AlphaFold2)"
 author: "Mason Lew (PID: A17533139)"
 date: today
 toc: TRUE
-format: pdf
+format: gfm
 ---
 
 Here we are going to analyze our AlphaFold structure prediction models. The input directory/folder comes from the ColabFold server:

@@ -1,7 +1,7 @@
 ---
 title: "Class19"
 author: "Mason Lew (PID: A17533139)"
-format: github_document
+format: gfm
 toc: TRUE
 Date: today
 ---

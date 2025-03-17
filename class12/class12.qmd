@@ -3,7 +3,7 @@ title: "12: Genome informatics"
 author: "Mason Lew (PID: A17533139"
 Date: Today
 TOC: TRUE
-format: pdf
+format: gfm
 ---
 
 ## Section 1: Identify genetic variants of interest

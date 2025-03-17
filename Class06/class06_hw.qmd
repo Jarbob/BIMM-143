@@ -1,7 +1,7 @@
 ---
 title: "class06_hw"
 author: "Mason Lew (PID: A17533139)"
-format: pdf
+format: gfm
 ---
 >Q6 How would you generalize the original code above to work with any set of input protein structures?
 

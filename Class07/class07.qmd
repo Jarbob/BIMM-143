@@ -1,7 +1,7 @@
 ---
 title: "class07"
 author: "Mason Lew (PID: A17533139)"
-format: pdf
+format: gfm
 ---
 
 Today we will explore unsupervised machine learning methods including clustering and dimensional reduction methods. 

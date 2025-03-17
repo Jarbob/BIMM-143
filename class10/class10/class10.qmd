@@ -2,7 +2,7 @@
 title: "Class 10: Structural Bioinformatics pt. 1"
 author: "Mason Lew (PID: A17533139)"
 date: today
-format: pdf
+format: gfm
 toc: TRUE
 ---
 
